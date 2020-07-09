@@ -7,6 +7,7 @@ import json
 import os
 import shlex
 from optparse import OptionParser
+from datetime import datetime
 
 
 def split_by_manifest(filename, manifest, vcodec="copy", acodec="copy",
@@ -22,6 +23,7 @@ def split_by_manifest(filename, manifest, vcodec="copy", acodec="copy",
                             output.
         extra (str)         - Extra options for ffmpeg.
     """
+
     if not os.path.exists(manifest):
         print "File does not exist: %s" % manifest
         raise SystemExit
@@ -46,10 +48,15 @@ def split_by_manifest(filename, manifest, vcodec="copy", acodec="copy",
             split_str = ""
             split_args = []
             try:
+                split_length = 0
                 split_start = video_config["start_time"]
-                split_length = video_config.get("end_time", None)
-                if not split_length:
+                end_time = video_config.get("end_time", None)
+        
+                if not end_time:
                     split_length = video_config["length"]
+                else: 
+                    split_length = get_split_length(split_start, end_time)
+
                 filebase = video_config["rename_to"]
                 if fileext in filebase:
                     filebase = ".".join(filebase.split(".")[:-1])
@@ -71,6 +78,12 @@ def split_by_manifest(filename, manifest, vcodec="copy", acodec="copy",
                 print "#############################################"
                 print e
                 raise SystemExit
+
+def get_split_length(start_time, end_time):
+    FMT = '%H:%M:%S'
+    tdelta = datetime.strptime(end_time, FMT) - datetime.strptime(start_time, FMT)  
+
+    return tdelta.seconds + 1  
 
 def get_video_length(filename):
 
